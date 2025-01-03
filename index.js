@@ -1,7 +1,7 @@
 require('dotenv').config()
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.PORT || 5000;
 
@@ -26,31 +26,74 @@ async function run() {
         await client.connect();
 
         const database = client.db('libraryDB');
-        const libraryCollection = database.collection('books')
+        const libraryCollection = database.collection('books');
+        const borrowCollection = database.collection(('borrows'))
 
-
+        // Library collection post, get, put, patch, delete 
         app.post('/add-book', async (req, res) => {
             const newBook = req.body;
-            console.log(newBook)
             const result = await libraryCollection.insertOne(newBook);
-            console.log(result)
             res.send(result)
         });
 
         app.get('/all-books', async (req, res) => {
-            const result = await libraryCollection.find().toArray(); 
+            const result = await libraryCollection.find().toArray();
             res.send(result);
         })
 
-        app.get('/category/:category', async(req, res) => {
+        app.get('/category/:category', async (req, res) => {
             const category = req.params.category
-            const query = {category : category}
+            const query = { category: category }
             const result = await libraryCollection.find(query).toArray()
             res.send(result)
         })
 
+        app.get('/book-details/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            console.log(query)
+            const result = await libraryCollection.findOne(query);
+            console.log(result)
+            res.send(result)
+        })
 
+        app.put('/update-book/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updateBook = req.body;
+            const book = {
+                $set: {
+                    name: updateBook.name,
+                    author: updateBook.author,
+                    category: updateBook.category,
+                    rating: updateBook.rating,
+                    image: updateBook.image,
+                }
+            }
+            const result = await libraryCollection.updateOne(query, book, options);
+            res.send(result)
+        })
 
+        // Borrow collection post, get, put, patch, delete 
+        app.post('/add-borrow-book', async (req, res) => {
+            const borrowBook = req.body;
+            const result = await borrowCollection.insertOne(borrowBook);
+            res.send(result)
+        })
+
+        app.get('/borrow-books', async (req, res) => {
+            const result = await borrowCollection.find().toArray()
+            console.log(result)
+            res.send(result)
+        })
+
+        app.get('/borrows/:userId', async (req, res) => {
+            const userId = req.params.userId;
+            const query = { userId: userId }
+            const result = await borrowCollection.find(query).toArray();
+            res.send(result)
+        })
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
