@@ -8,7 +8,11 @@ const port = process.env.PORT || 5000;
 // MiddleWare 
 app.use(cors());
 app.use(express.json());
-
+app.use((req, res, next) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    next();
+  });
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.zs4np.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -115,8 +119,8 @@ async function run() {
             res.send(result)
         })
 
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        // await client.db("admin").command({ ping: 1 });
+        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
@@ -131,5 +135,5 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => {
-    console.log(`library management server is running port is ${port}`)
+    // console.log(`library management server is running port is ${port}`)
 })
