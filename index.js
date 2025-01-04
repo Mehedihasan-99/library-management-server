@@ -51,9 +51,7 @@ async function run() {
         app.get('/book-details/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
-            console.log(query)
             const result = await libraryCollection.findOne(query);
-            console.log(result)
             res.send(result)
         })
 
@@ -79,21 +77,40 @@ async function run() {
         app.post('/add-borrow-book', async (req, res) => {
             const borrowBook = req.body;
             const result = await borrowedBooksCollection.insertOne(borrowBook);
+            const id = borrowBook.bookId;
+            const query = { _id: new ObjectId(id) }
+            const book = await libraryCollection.findOne(query)
+            const newQuantity = book.quantity - 1
+            const updateDoc = {
+                $set: {
+                    quantity: newQuantity
+                }
+            }
+            const updateBook = await libraryCollection.updateOne(query, updateDoc)
             res.send(result)
         })
 
         app.get('/borrowed-books', async (req, res) => {
             const userEmail = req.query.email;
-            const query = { email : userEmail }
-            console.log(query)
+            const query = { email: userEmail }
             const result = await borrowedBooksCollection.find(query).toArray();
-            console.log(result)
             res.send(result)
         })
 
         app.delete('/borrowed-books/:id', async (req, res) => {
-            const id =   req.params.id;
-            const query = { _id : new ObjectId(id) };
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const { bookId } = await borrowedBooksCollection.findOne(query)
+            const book_Id = bookId;
+            const queryBook = { _id: new ObjectId(book_Id) }
+            const book = await libraryCollection.findOne(queryBook)
+            const newQuantity = book.quantity + 1
+            const updateDoc = {
+                $set: {
+                    quantity: newQuantity
+                }
+            }
+            const updateBook = await libraryCollection.updateOne(queryBook, updateDoc);
             const result = await borrowedBooksCollection.deleteOne(query);
             res.send(result)
         })
