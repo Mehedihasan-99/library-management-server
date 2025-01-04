@@ -82,18 +82,19 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/borrow-books', async (req, res) => {
-            const result = await borrowedBooksCollection.find().toArray()
-            console.log(result)
-            res.send(result)
-        })
-
         app.get('/borrowed-books', async (req, res) => {
             const userEmail = req.query.email;
             const query = { email : userEmail }
             console.log(query)
             const result = await borrowedBooksCollection.find(query).toArray();
             console.log(result)
+            res.send(result)
+        })
+
+        app.delete('/borrowed-books/:id', async (req, res) => {
+            const id =   req.params.id;
+            const query = { _id : new ObjectId(id) };
+            const result = await borrowedBooksCollection.deleteOne(query);
             res.send(result)
         })
 
