@@ -27,7 +27,7 @@ async function run() {
 
         const database = client.db('libraryDB');
         const libraryCollection = database.collection('books');
-        const borrowCollection = database.collection(('borrows'))
+        const borrowedBooksCollection = database.collection(('borrows'))
 
         // Library collection post, get, put, patch, delete 
         app.post('/add-book', async (req, res) => {
@@ -78,22 +78,25 @@ async function run() {
         // Borrow collection post, get, put, patch, delete 
         app.post('/add-borrow-book', async (req, res) => {
             const borrowBook = req.body;
-            const result = await borrowCollection.insertOne(borrowBook);
+            const result = await borrowedBooksCollection.insertOne(borrowBook);
             res.send(result)
         })
 
         app.get('/borrow-books', async (req, res) => {
-            const result = await borrowCollection.find().toArray()
+            const result = await borrowedBooksCollection.find().toArray()
             console.log(result)
             res.send(result)
         })
 
-        app.get('/borrows/:userId', async (req, res) => {
-            const userId = req.params.userId;
-            const query = { userId: userId }
-            const result = await borrowCollection.find(query).toArray();
+        app.get('/borrowed-books', async (req, res) => {
+            const userEmail = req.query.email;
+            const query = { email : userEmail }
+            console.log(query)
+            const result = await borrowedBooksCollection.find(query).toArray();
+            console.log(result)
             res.send(result)
         })
+
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
