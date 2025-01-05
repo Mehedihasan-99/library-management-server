@@ -12,7 +12,8 @@ app.use((req, res, next) => {
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
     next();
-  });
+});
+
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.zs4np.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -27,7 +28,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-        await client.connect();
+        // await client.connect();
 
         const database = client.db('libraryDB');
         const libraryCollection = database.collection('books');
@@ -95,11 +96,21 @@ async function run() {
         })
 
         app.get('/borrowed-books', async (req, res) => {
-            const userEmail = req.query.email;
-            const query = { email: userEmail }
-            const result = await borrowedBooksCollection.find(query).toArray();
-            res.send(result)
-        })
+            const { email } = req.query;
+            console.log("Received email:", email); // Debug log
+            if (!email) {
+                return res.status(400).send({ error: "Email is required" });
+            }
+            const query = { email };
+            try {
+                const result = await borrowedBooksCollection.find(query).toArray();
+                console.log("Result:", result); // Debug log
+                res.send(result);
+            } catch (error) {
+                console.error("Error fetching borrowed books:", error); // Log error details
+                res.status(500).send({ error: "Failed to fetch borrowed books" });
+            }
+        });
 
         app.delete('/borrowed-books/:id', async (req, res) => {
             const id = req.params.id;
